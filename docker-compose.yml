@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  pipelines:
+    container_name: data_pipeline
+    build:
+      context: ./pipelines
+      args:
+        - DATA_CORE_SQLITE_DB_SOURCE_URL=${DATA_CORE_SQLITE_DB_SOURCE_URL}
+        - DATA_CORE_SQLITE_DB_CHECKSUM=${DATA_CORE_SQLITE_DB_CHECKSUM}
+        - DATASETTE_SQLITE_DB_FILENAME=${DATASETTE_SQLITE_DB_FILENAME:-foodscapes.db}
+        - DATASETTE_CORS_ORIGINS=${DATASETTE_CORS_ORIGINS}
+    env_file: .env
+    volumes:
+      - ./data_pipeline/data:/opt/foodscapes-data-pipeline/data/local-dev
+    restart: unless-stopped
+  datasette:
+    container_name: datasette
+    build:
+      context: ./datasette
+      args:
+        - DATASETTE_SQLITE_DB_FILENAME=${DATASETTE_SQLITE_DB_FILENAME:-foodscapes.db}
+        - DATA_CORE_SQLITE_DB_SOURCE_URL=${DATA_CORE_SQLITE_DB_SOURCE_URL}
+        - DATA_CORE_SQLITE_DB_CHECKSUM=${DATA_CORE_SQLITE_DB_CHECKSUM}
+        - DATASETTE_CORS_ORIGINS=${DATASETTE_CORS_ORIGINS}
+    env_file: .env
+    ports:
+      - "${DATASETTE_SERVICE_PORT}:3000"
+    volumes:
+      - ./datasette/data:/opt/foodscapes-datasette/data/local-dev
+    restart: unless-stopped
